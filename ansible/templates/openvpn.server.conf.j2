@@ -1,0 +1,42 @@
+port {{ openvpn_port }}
+proto {{ openvpn_proto }}
+dev {{ openvpn_dev }}
+
+ca {{ openvpn_ca_path }}
+cert {{ openvpn_cert_path }}
+key {{ openvpn_key_path }}
+dh {{ openvpn_dh_path }}
+
+crl-verify {{ openvpn_crl_path }}
+
+server {{ openvpn_server }}
+ifconfig-pool-persist ipp.txt
+
+push "redirect-gateway def1 bypass-dhcp"
+{% for route in openvpn_routes %}
+push "route {{ route.dest }} {{ route.mask }}" 
+{% endfor %}
+push "dhcp-option DNS {{ openvpn_dns }}"
+push "dhcp-option DOMAIN {{ prv_domain }}"
+
+keepalive 10 120
+tls-auth {{ openvpn_ta_key_path }} 0 # This file is secret
+key-direction 0
+cipher {{ openvpn_cipher }}
+
+auth SHA256
+tls-version-min 1.2
+tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA384:TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384:TLS-DHE-RSA-WITH-AES-256-CBC-SHA256
+user nobody
+group nogroup
+
+persist-key
+persist-tun
+
+status {{ openvpn_log_status }}
+
+log         {{ openvpn_log_append }}
+log-append  {{ openvpn_log_append }}
+
+verb 3
+

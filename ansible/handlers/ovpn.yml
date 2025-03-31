@@ -1,0 +1,10 @@
+---
+- name: System reboot
+  ansible.builtin.reboot:
+
+- name: Restart openvpn
+  ansible.builtin.service:
+    name: openvpn@server
+    state: restarted
+    enabled: true
+

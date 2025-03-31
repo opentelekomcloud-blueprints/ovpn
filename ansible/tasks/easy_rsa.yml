@@ -1,0 +1,64 @@
+---
+- name: Download easy-rsa
+  ansible.builtin.get_url:
+    url: "{{ easy_rsa_url }}"
+    dest: "{{ easy_rsa_dest }}/easy-rsa.tgz"
+    mode: "0640"
+    owner: root
+    group: root
+    force: false
+
+- name: Unarchive easy-rsa
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "{{ easy_rsa_dest }}/easy-rsa.tgz"
+    dest: "{{ easy_rsa_dest }}"
+    owner: root
+    group: root
+
+- name: Symlink easy-rsa
+  ansible.builtin.file:
+    src: "{{ easy_rsa_dest }}/EasyRSA-3.1.5"
+    dest: "{{ easy_rsa_dest }}/easy-rsa"
+    owner: root
+    group: root
+    state: link
+
+- name: Create vars file from template
+  ansible.builtin.template:
+    src: templates/easy-rsa.vars.j2
+    dest: "{{ easy_rsa_dir }}/vars"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Init PKI directory
+  ansible.builtin.shell: 'echo "yes" | ./easyrsa init-pki'
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki"
+
+- name: Generate diffie-hellman parameters
+  ansible.builtin.shell: "./easyrsa gen-dh"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/dh.pem"
+
+- name: Build CA
+  ansible.builtin.shell: "echo {{ vpn_pub_fqdn }} | ./easyrsa build-ca nopass"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/ca.crt"
+
+- name: Build vpnserver Certificate and KEY
+  ansible.builtin.shell: "echo yes | ./easyrsa build-server-full {{ vpn_pub_fqdn }} nopass"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/issued/{{ vpn_pub_fqdn }}.crt"
+
+- name: Create CRL
+  ansible.builtin.shell: "./easyrsa gen-crl"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/crl.pem"
+

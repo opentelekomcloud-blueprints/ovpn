@@ -1,0 +1,9 @@
+---
+- name: Get EasyRSA Index list (easy-rsa/pki/index.txt)
+  ansible.builtin.shell: echo -n "### EasyRSA Index list" && echo "" && cat "{{ easy_rsa_key_dir }}/index.txt" && echo ""
+  register: rsa_index
+
+- name: Print EasyRSA Index list
+  ansible.builtin.debug:
+    msg: "{{ rsa_index.stdout_lines }}"
+

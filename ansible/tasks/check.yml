@@ -1,0 +1,8 @@
+---
+- name: Host checks
+  ansible.builtin.shell: echo -n "### " && uname -a && uptime && echo "" && netstat -tulpen && echo "" && ufw status
+  register: hostcheck
+
+- name: Print checks
+  ansible.builtin.debug:
+    msg: "{{ hostcheck.stdout_lines }}"

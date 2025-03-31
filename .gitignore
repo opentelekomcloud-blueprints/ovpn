@@ -1,0 +1,18 @@
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+/out/
+*/out
+
+### VS Code ###
+.vscode/
+
+### Terraform ###
+.terraform/*
+terraform.*
+.terraform.*
+
+### OTC init scripts
+otc-backend.*

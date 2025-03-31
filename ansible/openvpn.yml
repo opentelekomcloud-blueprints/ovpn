@@ -1,0 +1,81 @@
+#
+# Configure and maintain an OpenVPN Server
+#
+# OS: Ubuntu 22.04 / OTC ECS
+#
+# REQUIREMENTS:
+#   - ansible-galaxy collection install community.general
+#
+# USAGE:
+#   ansible-playbook openvpn.yml --private-key ~/.ssh/mysshkey
+#       -t base_configuration   ... basic configuration
+#       -t easy-rsa             ... setup easy rsa
+#       -t openvpn              ... setup openvpn server
+#       -t firewall             ... setup ufw
+#       -t create_users         ... create users (zip archive will be downloaded to /tmp/vpns)
+#       -t revoke_users         ... revoke users
+#       -t easyrsa_index        ... get easyrsa index
+#       -t backup               ... create and download a backup of /etc/openvpn
+#       -t restore              ... restore a backup to /etc/openvpn
+#                                     a bachup is created prior restore
+#                                     there will be a prompt where you need to confirm the restore
+#                                     use  --extra-vars backup=/path/to/ovpn.123456789.tgz
+#
+---
+- name: Configure OpenVPN Server
+  hosts: vpnserver
+  become: true
+  gather_facts: true
+  vars_files:
+    - vars/main.yml
+
+  handlers:
+
+    - name: Import OVPN handler
+      ansible.builtin.import_tasks:
+        file: handlers/ovpn.yml
+
+  pre_tasks:
+
+    - name: Check
+      tags: [always]
+      ansible.builtin.import_tasks: tasks/check.yml
+
+  tasks:
+
+    - name: Base configuration
+      tags: [never, base_configuration]
+      ansible.builtin.import_tasks: tasks/base_configuration.yml
+
+    - name: Configure easy rsa
+      tags: [never, easy-rsa]
+      ansible.builtin.import_tasks: tasks/easy_rsa.yml
+
+    - name: Configure openvpn
+      tags: [never, openvpn]
+      ansible.builtin.import_tasks: tasks/openvpn.yml
+
+    - name: Firewall setup
+      tags: [never, firewall]
+      ansible.builtin.import_tasks: tasks/firewall.yml
+
+    - name: Create users
+      tags: [never, create_users]
+      ansible.builtin.import_tasks: tasks/ovpn_create_users.yml
+
+    - name: Revoke users
+      tags: [never, revoke_users]
+      ansible.builtin.import_tasks: tasks/ovpn_revoke_users.yml
+
+    - name: Get EasyRSA_Index
+      tags: [never, easyrsa_index]
+      ansible.builtin.import_tasks: tasks/ovpn_easyrsa_index.yml
+
+    - name: Create Backup
+      tags: [never, backup]
+      ansible.builtin.import_tasks: tasks/backup.yml
+
+    - name: Restore from Backup
+      tags: [never, restore]
+      ansible.builtin.import_tasks: tasks/restore.yml
+

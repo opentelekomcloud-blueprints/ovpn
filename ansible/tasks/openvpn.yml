@@ -1,0 +1,72 @@
+---
+- name: Create Openvpn secrets directory
+  ansible.builtin.file:
+    dest: "{{ openvpn_dir }}/secrets"
+    state: directory
+    owner: root
+    group: nogroup
+    mode: "0750"
+
+- name: Create Openvpn ta.key
+  ansible.builtin.shell: "openvpn --genkey secret secrets/ta.key"
+  args:
+    chdir: "{{ openvpn_dir }}"
+    creates: "{{ openvpn_dir }}/secrets/ta.key"
+
+- name: Let Openvpn read ta.key
+  ansible.builtin.file:
+    dest: "{{ openvpn_dir }}/secrets/ta.key"
+    owner: root
+    group: nogroup
+    mode: '0640'
+
+- name: Copy certificate and key
+  ansible.builtin.copy:
+    remote_src: True
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: nogroup
+    mode: '0640'
+  with_items:
+    - src: "{{ easy_rsa_dir }}/pki/issued/{{ vpn_pub_fqdn }}.crt"
+      dest: "{{ openvpn_dir }}/secrets/{{ vpn_pub_fqdn }}.crt"
+    - src: "{{ easy_rsa_dir }}/pki/private/{{ vpn_pub_fqdn }}.key"
+      dest: "{{ openvpn_dir }}/secrets/{{ vpn_pub_fqdn }}.key"
+
+- name: Let Openvpn read easy-rsa pki directory
+  ansible.builtin.file:
+    dest: "{{ easy_rsa_dir }}/pki"
+    owner: root
+    group: nogroup
+    mode: "0750"
+
+- name: Let Openvpn read easy-rsa ca, dh and crl
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    owner: root
+    group: nogroup
+    mode: "0640"
+  with_items:
+    - "{{ easy_rsa_dir }}/pki/ca.crt"
+    - "{{ easy_rsa_dir }}/pki/dh.pem"
+    - "{{ easy_rsa_dir }}/pki/crl.pem"
+
+- name: Openvpn configuration from template
+  ansible.builtin.template:
+    src: templates/openvpn.server.conf.j2
+    dest: "{{ openvpn_dir }}/server.conf"
+    owner: root
+    group: nogroup
+    mode: "0640"
+  notify:
+    - Restart openvpn
+
+- name: Create Openvpn client config archive directory
+  ansible.builtin.file:
+    dest: "{{ openvpn_dir }}/clientsarchive"
+    state: directory
+    owner: root
+    group: nogroup
+    mode: "0750"
+

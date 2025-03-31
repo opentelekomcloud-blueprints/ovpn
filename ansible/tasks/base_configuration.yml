@@ -1,0 +1,23 @@
+---
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ vpn_hostname }}"
+
+- name: Update hosts
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    line: "{{ vpn_prv_ipv4 }} {{ vpn_hostname }}"
+    state: present
+
+- name: Update & Upgrade
+  ansible.builtin.apt:
+    upgrade: yes
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Install packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ vpn_packages }}"
+

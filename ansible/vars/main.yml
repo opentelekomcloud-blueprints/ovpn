@@ -1,0 +1,65 @@
+---
+platform: "{{ tf_platform }}"
+prv_domain: "{{ tf_prv_domain }}"
+prv_pw: "Rv7rQ!9PRs6xTX#2"
+
+subnet_cidr:    "{{ tf_subnet_cidr }}"
+subnet_network: "{{ tf_subnet_network }}"
+subnet_netmask: "{{ tf_subnet_netmask }}"
+
+vpn_packages:
+  - openssl
+  - openvpn
+  - sudo
+  - git
+  - ufw
+vpn_hostname: "{{ tf_hostname }}"
+vpn_pub_fqdn: "{{ tf_vpn_pub_fqdn }}"
+vpn_pub_ipv4: "{{ tf_public_ip }}"
+vpn_prv_ipv4: "{{ tf_local_ip }}"
+vpn_prv_fqdn: "{{ tf_hostname }}.{{ tf_prv_domain }}"
+vpn_l_arch: "../otc-backend.vpns"
+vpn_b_arch: "../otc-backend.backups"
+
+easy_rsa_url:          "https://github.com/OpenVPN/easy-rsa/releases/download/v3.1.5/EasyRSA-3.1.5.tgz"
+easy_rsa_source:       "/usr/share/easy-rsa"
+easy_rsa_dest:         "/etc/openvpn"
+easy_rsa_dir:          "/etc/openvpn/easy-rsa"
+easy_rsa_key_dir:      "{{ easy_rsa_dir }}/pki"
+easy_rsa_key_country:  "{{ tf_easy_rsa_key_country }}"
+easy_rsa_key_province: "{{ tf_easy_rsa_key_province }}"
+easy_rsa_key_city:     "{{ tf_easy_rsa_key_city }}"
+easy_rsa_key_org:      "{{ tf_easy_rsa_key_org }}"
+easy_rsa_key_email:    "{{ tf_easy_rsa_key_email }}"
+easy_rsa_key_ou:       "{{ tf_easy_rsa_key_ou }}"
+easy_rsa_key_size:     "{{ tf_easy_rsa_key_size }}"
+easy_rsa_ca_expire:    "{{ tf_easy_rsa_ca_expire }}"
+easy_rsa_key_expire:   "{{ tf_easy_rsa_key_expire }}"
+easy_rsa_crl_expire:   "{{ tf_easy_rsa_crl_expire }}"
+
+openvpn_dir:         "{{ easy_rsa_dest }}"
+openvpn_port:        "{{ tf_ovpn_port }}"
+openvpn_proto:       "{{ tf_openvpn_proto }}"
+openvpn_dev:         "{{ tf_openvpn_dev }}"
+openvpn_nic:         "{{ tf_openvpn_nic }}"
+openvpn_dns:         "{{ tf_openvpn_dns }}"
+openvpn_ca_path:     "{{ easy_rsa_key_dir }}/ca.crt"
+openvpn_dh_path:     "{{ easy_rsa_key_dir }}/dh.pem"
+openvpn_crl_path:    "{{ easy_rsa_key_dir }}/crl.pem"
+openvpn_cert_path:   "{{ openvpn_dir }}/secrets/{{ vpn_pub_fqdn }}.crt"
+openvpn_key_path:    "{{ openvpn_dir }}/secrets/{{ vpn_pub_fqdn }}.key"
+openvpn_ta_key_path: "{{ openvpn_dir }}/secrets/ta.key"
+openvpn_network:     "{{ tf_openvpn_network }}"
+openvpn_netmask:     "{{ tf_openvpn_netmask }}"
+openvpn_cidr:        "{{ tf_openvpn_cidr }}"
+openvpn_server:      "{{ openvpn_network }} {{ openvpn_netmask }}"
+openvpn_cipher:      "{{ tf_openvpn_cipher }}"
+openvpn_log_status:  "/var/log/openvpn-status.log"
+openvpn_log_append:  "/var/log/openvpn.log"
+openvpn_routes:
+  - { dest: "{{ subnet_network }}", mask: "{{ subnet_netmask }}" }
+
+vpn_users:
+  - username
+
+vpn_users_to_revoke:

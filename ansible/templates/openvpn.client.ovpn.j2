@@ -1,0 +1,18 @@
+client
+dev tun
+proto {{ openvpn_proto }}
+remote {{ vpn_pub_ipv4 }} {{ openvpn_port }}
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+ca ca.crt
+cert {{ item }}.crt
+key {{ item }}.key
+tls-auth ta.key 1
+cipher {{ openvpn_cipher }}
+auth SHA256
+key-direction 1
+verb 3
+sndbuf 0
+rcvbuf 0

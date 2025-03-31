@@ -1,0 +1,47 @@
+{
+  "PLATFORM": "Openvpn",
+  "REGION": "eu-de",
+  "AVAILABILITY_ZONE": "eu-de-03",
+  "DNS_EMAIL": "admin@example.com",
+
+  "SSH_KEY_NAME":   "<ECS Key Pair Name>",
+  "SSH_PUBLIC_KEY": "ssh-rsa AAAAB3i*****PyvGmgj comment",
+
+  "VPC_CIDR":              "172.30.254.0/23",
+  "VPC_NAME":              "vpc-ovpn",
+  "VPC_SUBNET_CDR":        "172.30.254.0/24",
+  "VPC_SUBNET_NETWORK":    "172.30.254.0",
+  "VPC_SUBNET_NETMASK":    "255.255.255.0",
+  "VPC_SUBNET_NAME":       "subnet-ovpn",
+  "VPC_SUBNET_GATEWAY_IP": "172.30.254.1",
+
+  "OPENVPN_HOSTNAME": "ovpnserver",
+  "OPENVPN_IP":       "172.30.254.2",
+  "OPENVPN_PORT":     "1194",
+  "OPENVPN_PROTO":    "udp",
+  "OPENVPN_NETWORK":  "10.8.0.0",
+  "OPENVPN_NETMASK":  "255.255.255.0",
+  "OPENVPN_CIDR":     "10.8.0.0/24",
+  "PRV_DOMAIN":       "example.local",
+  "OPENVPN_FQDN":     "vpn.example.com",
+  "OPENVPN_DEV":      "tun",
+  "OPENVPN_NIC":      "ens3",
+  "OPENVPN_DNS":      "100.125.4.25",
+  "OPENVPN_CIPHER":   "AES-128-CBC",
+
+  "TAGS": {
+    "ENVIRONMENT": "Openvpn",
+    "TERRAFORM":   "True"
+  },
+
+  "EASY_RSA_KEY_COUNTRY":  "DE",
+  "EASY_RSA_KEY_PROVINCE": "DE",
+  "EASY_RSA_KEY_CITY":     "Muc",
+  "EASY_RSA_KEY_ORG":      "OTC",
+  "EASY_RSA_KEY_EMAIL":    "admin@example.com",
+  "EASY_RSA_KEY_OU":       "POC",
+  "EASY_RSA_KEY_SIZE":     "2048",
+  "EASY_RSA_CA_EXPIRE":    "3650",
+  "EASY_RSA_KEY_EXPIRE":   "3650",
+  "EASY_RSA_CRL_EXPIRE":   "3650"
+}

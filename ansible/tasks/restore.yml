@@ -1,0 +1,61 @@
+---
+- name: Restore from Backup
+  pause:
+    prompt: Please confirm you want to restore from Backup! Press return to continue. Press Ctrl+c and then "a" to abort
+
+- name: Create OpenVPN backup directory
+  ansible.builtin.file:
+    dest: "/home/{{ ansible_user }}/ovpn_backup"
+    state: directory
+    owner: root
+    group: nogroup
+    mode: "0750"
+
+- name: Backup current OpenVPN directory
+  community.general.archive:
+    path: "{{ openvpn_dir }}"
+    dest: "/home/{{ ansible_user }}/ovpn_backup/ovpn.{{ ansible_date_time.iso8601_basic }}.tgz"
+
+- name: Create local OpenVPN backup directory
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ vpn_b_arch }}"
+    mode: "0750"
+    state: directory
+
+- name: Fetch OpenVPN backup
+  ansible.builtin.fetch:
+    src: "/home/{{ ansible_user }}/ovpn_backup/ovpn.{{ ansible_date_time.iso8601_basic }}.tgz"
+    dest: "{{ vpn_b_arch }}/ovpn.{{ ansible_date_time.iso8601_basic }}.tgz"
+    flat: true
+
+- name: Check for local Backup file
+  fail:
+    msg: "Variable 'backup' is not defined, use '... --extra-vars backup=/path/to/my/backuparchive.tgz' "
+  when: backup is undefined
+
+- name: Create OpenVPN restore directory
+  ansible.builtin.file:
+    dest: "/home/{{ ansible_user }}/ovpn_restore"
+    state: directory
+    owner: root
+    group: nogroup
+    mode: "0750"
+
+- name: Upload a local Backup to OpenVPN server
+  ansible.builtin.copy:
+    src: "{{ backup }}"
+    dest: "/home/{{ ansible_user }}/ovpn_restore/{{ backup | basename }}"
+    owner: root
+    group: nogroup
+    mode: "0640"
+
+- name: Restore to /etc
+  ansible.builtin.unarchive:
+    src: "/home/{{ ansible_user }}/ovpn_restore/{{ backup | basename }}"
+    dest: "/etc"
+    remote_src: yes
+  notify:
+    - Restart openvpn
+

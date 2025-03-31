@@ -1,0 +1,115 @@
+---
+- name: Set a list of VPN users to be created
+  ansible.builtin.set_fact:
+    vpn_users_to_create: "{{ vpn_users }}"
+
+- name: Overwrite the list if one of the users in the list is explicitly specified
+  ansible.builtin.set_fact:
+    vpn_users_to_create: ["{{ user }}"]
+  when: user is defined and user in vpn_users
+
+- name: Generate certificate and key
+  ansible.builtin.shell: 'echo "yes" | ./easyrsa build-client-full {{ item }} nopass'
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/issued/{{ item }}.crt"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Create directory for files
+  ansible.builtin.file:
+    state: directory
+    path: "/tmp/{{ item }}-{{ platform }}"
+    owner: root
+    group: root
+    mode: "0755"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Copy user Certificate
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ easy_rsa_dir }}/pki/issued/{{ item }}.crt"
+    dest: "/tmp/{{ item }}-{{ platform }}"
+    owner: root
+    group: root
+    mode: "0600"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Copy user KEY
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ easy_rsa_dir }}/pki/private/{{ item }}.key"
+    dest: "/tmp/{{ item }}-{{ platform }}"
+    owner: root
+    group: root
+    mode: "0600"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Copy CA Certificate
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ easy_rsa_dir }}/pki/ca.crt"
+    dest: "/tmp/{{ item }}-{{ platform }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Copy ta.key
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ openvpn_dir }}/secrets/ta.key"
+    dest: "/tmp/{{ item }}-{{ platform }}"
+    owner: root
+    group: root
+    mode: "0600"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Create config file from template
+  ansible.builtin.template:
+    src: templates/openvpn.client.ovpn.j2
+    dest: "/tmp/{{ item }}-{{ platform }}/{{ item }}-{{ platform }}.ovpn"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Create archive
+  ansible.builtin.archive:
+    path: "/tmp/{{ item }}-{{ platform }}"
+    dest: "/tmp/{{ item }}-{{ platform }}.zip"
+    owner: root
+    mode: "0600"
+    format: zip
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Delete directories
+  ansible.builtin.file:
+    state: absent
+    path: "/tmp/{{ item }}-{{ platform }}"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Copy client config archives to archive directory
+  ansible.builtin.copy:
+    remote_src: true
+    src: "/tmp/{{ item }}-{{ platform }}.zip"
+    dest: "{{ openvpn_dir }}/clientsarchive/{{ item }}-{{ platform }}.zip"
+    owner: root
+    group: nogroup
+    mode: "0750"
+  with_items: "{{ vpn_users_to_create }}"
+
+- name: Create local temporary directory
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ vpn_l_arch }}"
+    mode: "0750"
+    state: directory
+
+- name: Fetch backup archive
+  ansible.builtin.fetch:
+    src: "/tmp/{{ item }}-{{ platform }}.zip"
+    dest: "{{ vpn_l_arch }}/{{ item }}-{{ platform }}.zip"
+    flat: true
+  with_items: "{{ vpn_users_to_create }}"
+
